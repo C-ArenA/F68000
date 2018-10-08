@@ -35,8 +35,6 @@ module glue_logic(
 	input  [2:0]  addr_lower,                /* Lower address bits */
 	input  [5:0]  addr_upper,                /* Upper address bits */
 	input  [6:0]  irq_n,                     /* IRQ1-IRQ7          */
-	input         uart_dtack_n,              /* UART DTACK         */
-	input         pit_dtack_n,               /* PIT DTACK          */
 	input         por_n,                     /* Power On Reset     */
 	input         br_n,                      /* Bus Request        */
 	input         bg_n,                      /* Bus Grant          */
@@ -54,7 +52,7 @@ module glue_logic(
 	output        lowr_n,                    /* Lower write        */
 	output        uprd_n,                    /* Upper read         */
 	output        upwr_n,                    /* Upper write        */
-	output        dtack_n,                   /* DTACK              */
+	inout         dtack_n,                   /* DTACK              */
 	output        ben_n,                     /* Bus Buffers Enable */
 	output        vpa_n                      /* Valid Periph Addr. */
 );
@@ -82,7 +80,7 @@ module glue_logic(
 	assign uart_sel_n = strobe_n | uart_address_n;
 	assign pit_sel_n  = strobe_n | pit_address_n;
 	
-	assign dtack_n = (uart_dtack_n & pit_dtack_n & ram_sel_n & rom_sel_n) ? 1'bZ : 1'b0;
+	assign dtack_n = (ram_sel_n & rom_sel_n) ? 1'bZ : 1'b0;
 
 	/***************************************/
 	/* Reset                               */
