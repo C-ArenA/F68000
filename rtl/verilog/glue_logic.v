@@ -33,10 +33,14 @@ module glue_logic(
 	input         uds_n,                     /* Upper data Strobe  */
 	input  [2:0]  fc,                        /* CPU Status         */
 	input  [2:0]  addr_lower,                /* Lower address bits */
-	input  [2:0]  addr_upper,                /* Upper address bits */
+	input  [5:0]  addr_upper,                /* Upper address bits */
 	input  [6:0]  irq_n,                     /* IRQ1-IRQ7          */
 	input         uart_dtack_n,              /* UART DTACK         */
+	input         pit_dtack_n,               /* PIT DTACK          */
 	input         por_n,                     /* Power On Reset     */
+	input         br_n,                      /* Bus Request        */
+	input         bg_n,                      /* Bus Grant          */
+	input         bgack_n,                   /* Bus Grant Ack      */
 	output        reset_n,                   /* Reset              */
 	output        halt_n,                    /* Halt               */
 	output [2:0]  ipl_n,                     /* IPL0-IPL2          */
@@ -45,14 +49,20 @@ module glue_logic(
 	output        ram_sel_n,                 /* RAM select         */
 	output        rom_sel_n,                 /* ROM select         */
 	output        uart_sel_n,                /* UART select        */
+	output        pit_sel_n,                 /* PIT select         */
 	output        lord_n,                    /* Lower read         */
 	output        lowr_n,                    /* Lower write        */
 	output        uprd_n,                    /* Upper read         */
 	output        upwr_n,                    /* Upper write        */
-	output        dtack_n                    /* DTACK              */
+	output        dtack_n,                   /* DTACK              */
+	output        ben_n,                     /* Bus Buffers Enable */
+	output        vpa_n                      /* Valid Periph Addr. */
 );
 	wire   cpu_iack     = fc[2:0] == 3'b111; /* IRQ ack cycle      */
 	wire   strobe_n     = as_n | cpu_iack;   /* Bus cycle strobe   */
+
+	assign vpa_n = 1'b1; /* No 6800 devices yet           */
+	assign ben_n = 1'b1; /* Bus Buffers always on for now */
 
 	/***************************************/
 	/* Address Decoder                     */
@@ -60,16 +70,19 @@ module glue_logic(
 	wire   ram_address_n; 
 	wire   rom_address_n; 
 	wire   uart_address_n;
+	wire   pit_address_n;
 
-	assign rom_address_n  = ~(addr_upper == 3'b111);
-	assign uart_address_n = ~(addr_upper == 3'b110);
-	assign ram_address_n  = ~(rom_address_n & uart_address_n);
+	assign rom_address_n  = addr_upper[3:0] != 4'b1111;   /* $f00000 - $ffffff */
+	assign uart_address_n = addr_upper[5:0] != 6'b111011; /* $ec0000 - $efffff */
+	assign pit_address_n  = addr_upper[5:0] != 6'b111010; /* $e80000 - $ebffff */
+	assign ram_address_n  = addr_upper[2:0] != 3'b000;    /* $000000 - $0fffff */
 
 	assign ram_sel_n  = strobe_n | ram_address_n;
 	assign rom_sel_n  = strobe_n | rom_address_n;
 	assign uart_sel_n = strobe_n | uart_address_n;
+	assign pit_sel_n  = strobe_n | pit_address_n;
 	
-	assign dtack_n = uart_dtack_n & ram_sel_n & rom_sel_n;
+	assign dtack_n = (uart_dtack_n & pit_dtack_n & ram_sel_n & rom_sel_n) ? 1'bZ : 1'b0;
 
 	/***************************************/
 	/* Reset                               */

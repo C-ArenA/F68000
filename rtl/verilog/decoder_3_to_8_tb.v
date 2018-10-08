@@ -21,7 +21,7 @@
 `timescale 1ns/1ps
 `include "decoder_3_to_8.v"
 
-module interrupt_encoder_tb();
+module decoder_3_to_8_tb();
 	reg [2:0] a;
 	reg e1_n;
 	reg e2_n;
