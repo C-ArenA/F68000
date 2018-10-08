@@ -61,8 +61,8 @@ module glue_logic(
 	wire   cpu_iack     = fc[2:0] == 3'b111; /* IRQ ack cycle      */
 	wire   strobe_n     = as_n | cpu_iack;   /* Bus cycle strobe   */
 
-	assign vpa_n = 1'b1; /* No 6800 devices yet           */
-	assign ben_n = 1'b0; /* Bus Buffers always on for now */
+	assign vpa_n = 1'bZ;                     /* Ignore for now     */ 
+	assign ben_n = 1'b0;                     /* Buffer always on   */
 
 	/***************************************/
 	/* Address Decoder                     */
