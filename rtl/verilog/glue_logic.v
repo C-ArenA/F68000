@@ -62,7 +62,7 @@ module glue_logic(
 	wire   strobe_n     = as_n | cpu_iack;   /* Bus cycle strobe   */
 
 	assign vpa_n = 1'b1; /* No 6800 devices yet           */
-	assign ben_n = 1'b1; /* Bus Buffers always on for now */
+	assign ben_n = 1'b0; /* Bus Buffers always on for now */
 
 	/***************************************/
 	/* Address Decoder                     */
