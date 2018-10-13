@@ -39,6 +39,8 @@ module glue_logic(
 	input         br_n,                      /* Bus Request        */
 	input         bg_n,                      /* Bus Grant          */
 	input         bgack_n,                   /* Bus Grant Ack      */
+	input         vdp_irq_n,                 /* VDP IRQ            */
+	input         vdp_wait_n,                /* VDP Wait           */
 	output        reset_n,                   /* Reset              */
 	output        halt_n,                    /* Halt               */
 	output [2:0]  ipl_n,                     /* IPL0-IPL2          */
@@ -54,7 +56,9 @@ module glue_logic(
 	output        upwr_n,                    /* Upper write        */
 	inout         dtack_n,                   /* DTACK              */
 	output        ben_n,                     /* Bus Buffers Enable */
-	output        vpa_n                      /* Valid Periph Addr. */
+	output        vpa_n,                     /* Valid Periph Addr. */
+	output        vdp_rd,
+	output        vdp_wr
 );
 	wire   cpu_iack     = fc[2:0] == 3'b111; /* IRQ ack cycle      */
 	wire   strobe_n     = as_n | cpu_iack;   /* Bus cycle strobe   */
