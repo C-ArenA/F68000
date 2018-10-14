@@ -49,7 +49,6 @@ module glue_logic(
 	output        ram_sel_n,                 /* RAM select         */
 	output        rom_sel_n,                 /* ROM select         */
 	output        uart_sel_n,                /* UART select        */
-	output        pit_sel_n,                 /* PIT select         */
 	output        lord_n,                    /* Lower read         */
 	output        lowr_n,                    /* Lower write        */
 	output        uprd_n,                    /* Upper read         */
@@ -57,8 +56,8 @@ module glue_logic(
 	inout         dtack_n,                   /* DTACK              */
 	output        ben_n,                     /* Bus Buffers Enable */
 	output        vpa_n,                     /* Valid Periph Addr. */
-	output        vdp_rd,
-	output        vdp_wr
+	output        vdp_rd_n,
+	output        vdp_wr_n
 );
 	wire   cpu_iack     = fc[2:0] == 3'b111; /* IRQ ack cycle      */
 	wire   strobe_n     = as_n | cpu_iack;   /* Bus cycle strobe   */
@@ -72,19 +71,20 @@ module glue_logic(
 	wire   ram_address_n; 
 	wire   rom_address_n; 
 	wire   uart_address_n;
-	wire   pit_address_n;
+	wire   vdp_address_n;
+	wire   vdp_sel_n;
 
 	assign rom_address_n  = addr_upper[3:0] != 4'b1111;   /* $f00000 - $ffffff */
 	assign uart_address_n = addr_upper[5:0] != 6'b111011; /* $ec0000 - $efffff */
-	assign pit_address_n  = addr_upper[5:0] != 6'b111010; /* $e80000 - $ebffff */
+	assign vdp_address_n  = addr_upper[5:0] != 6'b111010; /* $e80000 - $ebffff */
 	assign ram_address_n  = addr_upper[2:0] != 3'b000;    /* $000000 - $0fffff */
 
 	assign ram_sel_n  = strobe_n | ram_address_n;
 	assign rom_sel_n  = strobe_n | rom_address_n;
 	assign uart_sel_n = strobe_n | uart_address_n;
-	assign pit_sel_n  = strobe_n | pit_address_n;
+	assign vdp_sel_n  = strobe_n | vdp_address_n;
 	
-	assign dtack_n = (ram_sel_n & rom_sel_n) ? 1'bZ : 1'b0;
+	assign dtack_n = (ram_sel_n & rom_sel_n & ~vdp_wait_n) ? 1'bZ : 1'b0;
 
 	/***************************************/
 	/* Reset                               */
@@ -95,6 +95,8 @@ module glue_logic(
 	/***************************************/
 	/* Interrupts                          */
 	/***************************************/
+	// TODO: Add autovectored interrupts
+	// for VDP
 	(*  keep="soft" *)
 	wire dummy_irq;
 
@@ -120,6 +122,12 @@ module glue_logic(
 	assign lord_n = rd | lds_n;
 	assign upwr_n = rw | uds_n;
 	assign uprd_n = rd | lds_n;
+
+	/***************************************/
+	/* VDP                                 */
+	/***************************************/
+	assign vdp_wr_n = vdp_sel_n | rw;
+	assign vdp_rd_n = vdp_sel_n | rd;
 
 	/***************************************/
 	/* Watchdog monitor                    */
